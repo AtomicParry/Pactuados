@@ -347,7 +347,9 @@ lists();render();
 import {entrar,meuPapel,db,doc,onSnapshot,updateDoc,serverTimestamp} from './firebase.js';
 const id=new URLSearchParams(location.search).get('id');
 if(!id)location.href='index.html';
-const u=await entrar(), papel=await meuPapel(u.uid);
+const u=await entrar();
+if(!u){location.href='index.html';await new Promise(()=>{})}
+const papel=await meuPapel(u.uid);
 if(!papel)location.href='index.html';
 const ref=doc(db,'fichas',id);
 let canEdit=false,applying=false,timer=null,lastJSON='';

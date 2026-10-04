@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pactuados — Hub da Mesa</title>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--red:#c4121a;--dark:#1b1b1b;--mut:#6f6b66;--line:#d9d6d0}
+*{box-sizing:border-box}
+body{margin:0;background:#000;color:var(--dark);font-family:'Courier Prime',monospace;font-size:15px;min-height:100vh}
+#fx{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+main{position:relative;z-index:1;max-width:980px;margin:28px auto;padding:0 12px}
+.sheet{background:#fff;border:3px solid var(--dark);outline:2px solid var(--red);outline-offset:4px;box-shadow:8px 8px 0 var(--red);padding:22px 24px 28px}
+h1{font-family:Anton,sans-serif;font-weight:400;font-size:clamp(46px,9vw,84px);line-height:1;margin:0;letter-spacing:.04em}
+h1 span{color:var(--red)}
+.sub{color:var(--mut);margin:4px 0 18px;border-bottom:4px solid var(--red);padding-bottom:12px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+input{font:inherit;border:0;border-bottom:2px solid var(--dark);padding:8px 4px;width:100%;max-width:340px}
+input:focus,button:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+.b{font:inherit;font-weight:700;background:var(--dark);color:#fff;border:0;padding:9px 16px;cursor:pointer}
+.b:hover{background:var(--red)}
+.err{color:var(--red);font-weight:700;margin-top:10px}
+.hint{color:var(--mut);font-size:13px}
+.hide{display:none}
+.tag{background:var(--red);color:#fff;padding:2px 10px;font-weight:700}
+.list{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;margin-top:16px}
+.card{border:3px solid var(--dark);padding:12px;display:flex;flex-direction:column;gap:6px;position:relative;background:#faf9f7}
+.card.mine{border-color:var(--red)}
+.card a.open{color:inherit;text-decoration:none}
+.card .nm{font-family:Anton,sans-serif;font-size:26px;letter-spacing:.04em;line-height:1.1;word-break:break-word}
+.card .cat{color:var(--red);font-weight:700}
+.st{display:flex;gap:10px;flex-wrap:wrap}
+.st div{border:2px solid var(--dark);padding:4px 8px;text-align:center;min-width:70px}
+.st small{display:block;font-size:11px;color:var(--mut)}
+.st b{font-family:Anton,sans-serif;font-weight:400;font-size:22px}
+.st .neg b{color:var(--red)}
+.x{align-self:flex-start;background:none;border:2px solid var(--red);color:var(--red);font:inherit;font-weight:700;font-size:12px;padding:3px 8px;cursor:pointer}
+.x:hover{background:var(--red);color:#fff}
+.tabs{display:flex;gap:6px;margin-bottom:14px}
+.tabs button{font:inherit;font-weight:700;background:#fff;border:2px solid var(--dark);padding:7px 16px;cursor:pointer}
+.tabs button.on{background:var(--red);border-color:var(--red);color:#fff}
+.f{display:grid;gap:10px;max-width:340px;margin-bottom:12px}
+.f label{font-size:12px;font-weight:700;color:var(--mut);margin-bottom:-6px}
+.top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:6px}
+.top .r{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.b.o{background:#fff;color:var(--dark);border:2px solid var(--dark)}
+.b.o:hover{background:var(--red);border-color:var(--red);color:#fff}
+.hello{font-size:17px}
+</style>
+</head>
+<body>
+<canvas id="fx"></canvas>
+<main><div class="sheet">
+  <h1>PACTU<span>ADOS</span></h1>
+  <div class="sub"><span>Hub da mesa · Chainsaw Man RPG</span></div>
+
+  <p id="load">Conectando…</p>
+
+  <div id="auth" class="hide">
+    <div class="tabs"><button id="tIn" class="on">Entrar</button><button id="tNew">Criar conta</button></div>
+    <div class="f">
+      <label>Nome de usuário</label><input id="user" autocomplete="username" placeholder="ex.: denji">
+      <label>Senha (mín. 6 caracteres)</label><input id="pass" type="password" autocomplete="current-password">
+    </div>
+    <button class="b" id="ok">Entrar</button>
+    <div class="err" id="aerr"></div>
+    <p class="hint">Use letras minúsculas, números, ponto, hífen ou _ (3 a 20 caracteres, sem espaços).</p>
+  </div>
+
+  <div id="code" class="hide">
+    <p class="hello">Olá, <b id="hi"></b>! Digite o <b>código da mesa</b> para entrar. O mestre usa o código de mestre.</p>
+    <div class="f"><input id="cod" type="password" placeholder="Código" autocomplete="off"></div>
+    <button class="b" id="go">Entrar na mesa</button> <button class="b o" id="out1">Sair da conta</button>
+    <div class="err" id="err"></div>
+  </div>
+
+  <div id="hub" class="hide">
+    <div class="top">
+      <div class="hello">Olá, <b id="hi2"></b> <span id="tag" class="tag"></span></div>
+      <div class="r"><button class="b o" id="mode"></button><button class="b o" id="out2">Sair da conta</button></div>
+    </div>
+    <div id="mrow" class="hide f" style="margin-top:8px"><label>Código de mestre</label>
+      <input id="mcod" type="password" autocomplete="off"><div><button class="b" id="mok">Confirmar</button></div>
+      <div class="err" id="merr"></div></div>
+    <button class="b" id="new" style="margin-top:10px">+ Nova ficha</button>
+    <div class="hint" style="margin-top:8px">Você edita as suas fichas; o mestre edita todas. As mudanças aparecem para todos em tempo real.</div>
+    <div class="list" id="list"></div>
+  </div>
+</div></main>
+
+<script type="module">
+import {entrar,criarConta,login,sair,meuPapel,entrarNaMesa,paraMestre,paraJogador,db,collection,addDoc,onSnapshot,deleteDoc,doc,serverTimestamp} from './firebase.js';
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+const show=id=>['load','auth','code','hub'].forEach(x=>$(x).classList.toggle('hide',x!==id));
+let u=null,papel=null,modo='entrar',unsub=null,fichas=[];
+const nomeOk=n=>/^[a-z0-9._-]{3,20}$/.test(n);
+const MSG={'auth/email-already-in-use':'Esse nome de usuário já existe.','auth/weak-password':'A senha precisa ter pelo menos 6 caracteres.',
+ 'auth/invalid-credential':'Usuário ou senha incorretos.','auth/wrong-password':'Usuário ou senha incorretos.','auth/user-not-found':'Usuário ou senha incorretos.',
+ 'auth/operation-not-allowed':'Ative o login por E-mail/senha no Firebase (Authentication).','auth/too-many-requests':'Muitas tentativas. Espere um pouco.'};
+const erro=e=>MSG[e.code]||('Erro: '+(e.code||e.message));
+
+async function iniciar(){
+  show('load');
+  try{u=await entrar()}catch(e){$('load').innerHTML='<span class="err">'+esc(erro(e))+'</span>';return}
+  if(!u){show('auth');return}
+  $('hi').textContent=$('hi2').textContent=u.displayName||'jogador';
+  papel=await meuPapel(u.uid);
+  if(papel)lista();else show('code');
+}
+iniciar();
+
+// conta
+const aba=m=>{modo=m;$('tIn').classList.toggle('on',m==='entrar');$('tNew').classList.toggle('on',m==='novo');
+  $('ok').textContent=m==='novo'?'Criar conta':'Entrar';$('pass').autocomplete=m==='novo'?'new-password':'current-password';$('aerr').textContent=''};
+$('tIn').onclick=()=>aba('entrar');$('tNew').onclick=()=>aba('novo');
+$('ok').onclick=async()=>{
+  const n=$('user').value.trim().toLowerCase(),p=$('pass').value;
+  $('aerr').textContent='';
+  if(!nomeOk(n)){$('aerr').textContent='Usuário: 3 a 20 caracteres, só letras minúsculas, números, ponto, hífen ou _ (sem espaços).';return}
+  try{modo==='novo'?await criarConta(n,p):await login(n,p);iniciar()}catch(e){$('aerr').textContent=erro(e)}
+};
+$('pass').addEventListener('keydown',e=>{if(e.key==='Enter')$('ok').click()});
+const logout=async()=>{unsub&&unsub();unsub=null;await sair();u=null;papel=null;$('pass').value='';show('auth')};
+$('out1').onclick=$('out2').onclick=logout;
+
+// código da mesa
+$('go').onclick=async()=>{
+  $('err').textContent='';
+  const p=await entrarNaMesa(u.uid,$('cod').value.trim());
+  if(p){papel=p;lista()}else $('err').textContent='Código incorreto (ou a mesa ainda não foi configurada no Firebase).';
+};
+$('cod').addEventListener('keydown',e=>{if(e.key==='Enter')$('go').click()});
+
+// modo jogador / mestre
+const topo=()=>{$('tag').textContent=papel==='mestre'?'MODO MESTRE':'MODO JOGADOR';
+  $('mode').textContent=papel==='mestre'?'Sair do modo mestre':'Entrar como mestre'};
+$('mode').onclick=async()=>{
+  $('merr').textContent='';
+  if(papel==='mestre'){if(await paraJogador(u.uid)){papel='jogador';$('mrow').classList.add('hide');topo();desenha()}return}
+  if(await paraMestre(u.uid)){papel='mestre';topo();desenha()}      // já provou ser mestre antes
+  else{$('mrow').classList.remove('hide');$('mcod').focus()}
+};
+$('mok').onclick=async()=>{
+  if(await paraMestre(u.uid,$('mcod').value.trim())){papel='mestre';$('mcod').value='';$('mrow').classList.add('hide');topo();desenha()}
+  else $('merr').textContent='Código de mestre incorreto.';
+};
+$('mcod').addEventListener('keydown',e=>{if(e.key==='Enter')$('mok').click()});
+
+// hub
+function lista(){
+  show('hub');topo();
+  $('new').onclick=async()=>{
+    const r=await addDoc(collection(db,'fichas'),{dono:u.uid,donoNome:u.displayName||'',criada:serverTimestamp(),
+      resumo:{nome:'',cat:1,vit:8,vitMax:8,pec:10,pecMax:10,ago:0,agoMax:3},dados:{info:{cat:1}}});
+    location.href='ficha.html?id='+r.id;
+  };
+  unsub&&unsub();
+  unsub=onSnapshot(collection(db,'fichas'),snap=>{fichas=snap.docs.map(d=>({id:d.id,...d.data()}));desenha()},
+    e=>{$('list').innerHTML='<span class="err">Sem permissão ('+esc(e.code)+')</span>'});
+}
+function desenha(){
+  const arr=[...fichas].sort((a,b)=>(b.dono===u.uid)-(a.dono===u.uid)||(a.resumo?.nome||'').localeCompare(b.resumo?.nome||''));
+  $('list').innerHTML=arr.map(f=>{
+    const r=f.resumo||{},mine=f.dono===u.uid,can=mine||papel==='mestre';
+    const box=(l,v,m)=>`<div class="${v<0?'neg':''}"><small>${l}</small><b>${v}/${m}</b></div>`;
+    return `<div class="card ${mine?'mine':''}"><a class="open" href="ficha.html?id=${f.id}">
+      <div class="nm">${esc(r.nome)||'Sem nome'}</div>
+      <div class="cat">CAT ${r.cat??1}${mine?' · sua ficha':f.donoNome?' · de '+esc(f.donoNome):''}</div></a>
+      <div class="st">${box('VIT',r.vit??0,r.vitMax??0)}${box('PEC',r.pec??0,r.pecMax??0)}${box('AGO',r.ago??0,r.agoMax??0)}</div>
+      <div class="hint">${can?'Você pode editar':'Somente leitura'}</div>
+      ${can?`<button class="x" data-del="${f.id}">Excluir</button>`:''}</div>`}).join('')
+    ||'<p class="hint">Nenhuma ficha ainda. Clique em "Nova ficha".</p>';
+}
+let delId=null,delT;
+document.addEventListener('click',async e=>{
+  const b=e.target.closest('[data-del]');if(!b)return;
+  if(delId!==b.dataset.del){delId=b.dataset.del;b.textContent='Confirmar exclusão?';clearTimeout(delT);delT=setTimeout(()=>{delId=null;b.textContent='Excluir'},4000);return}
+  delId=null;try{await deleteDoc(doc(db,'fichas',b.dataset.del))}catch(x){alert('Sem permissão para excluir.')}
+});
+
+// partículas
+(function(){
+  const cv=$('fx'),g=cv.getContext('2d'),calm=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let W,H,P=[];
+  const mk=()=>({x:Math.random()*W,y:Math.random()*H,r:Math.random()*2.2+.6,v:Math.random()*.35+.08,dx:(Math.random()-.5)*.25,a:Math.random()*.6+.2,t:Math.random()*6.28});
+  function size(){W=cv.width=innerWidth;H=cv.height=innerHeight;P=Array.from({length:Math.round(W*H/16000)},mk)}
+  function draw(){g.clearRect(0,0,W,H);
+    for(const p of P){if(!calm){p.y-=p.v;p.x+=p.dx;p.t+=.02;if(p.y<-5){p.y=H+5;p.x=Math.random()*W}}
+      g.beginPath();g.arc(p.x,p.y,p.r,0,6.283);g.fillStyle=`rgba(220,20,30,${p.a*(.6+.4*Math.sin(p.t))})`;g.shadowColor='#c4121a';g.shadowBlur=8;g.fill()}
+    if(!calm)requestAnimationFrame(draw)}
+  addEventListener('resize',()=>{size();if(calm)draw()});size();draw();
+})();
+</script>
+</body>
+</html>
