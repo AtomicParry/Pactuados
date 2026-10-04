@@ -369,13 +369,13 @@ $('reset').onclick=()=>{
 let mkBusy=false;
 function mini(src,cb){
   const im=new Image();
-  im.onload=()=>{const r=Math.min(1,320/Math.max(im.width,im.height)),c=document.createElement('canvas');
+  im.onload=()=>{const r=Math.min(1,420/Math.max(im.width,im.height)),c=document.createElement('canvas');
     c.width=Math.round(im.width*r);c.height=Math.round(im.height*r);
-    c.getContext('2d').drawImage(im,0,0,c.width,c.height);cb(c.toDataURL('image/jpeg',.75))};
+    const g=c.getContext('2d');g.imageSmoothingQuality='high';g.drawImage(im,0,0,c.width,c.height);cb(c.toDataURL('image/jpeg',.88))};
   im.onerror=()=>cb('');im.src=src;
 }
 function showFoto(){
-  if(S.foto&&(!S.fotoMini||S.miniV!==2)&&!mkBusy){mkBusy=true;mini(S.foto,m=>{S.fotoMini=m;S.miniV=2;mkBusy=false;if(m)save()})}
+  if(S.foto&&(!S.fotoMini||S.miniV!==3)&&!mkBusy){mkBusy=true;mini(S.foto,m=>{S.fotoMini=m;S.miniV=3;mkBusy=false;if(m)save()})}
   const i=$('fotoImg');i.src=S.foto||'';
   i.style.display=S.foto?'block':'none';
   $('fotoVazio').style.display=S.foto?'none':'block';
@@ -387,11 +387,11 @@ $('fotoFile').onchange=e=>{
   const f=e.target.files[0];e.target.value='';if(!f)return;
   const img=new Image(),url=URL.createObjectURL(f);
   img.onload=()=>{
-    const M=480,r=Math.min(1,M/Math.max(img.width,img.height)),c=document.createElement('canvas');
+    const M=640,r=Math.min(1,M/Math.max(img.width,img.height)),c=document.createElement('canvas');
     c.width=Math.round(img.width*r);c.height=Math.round(img.height*r);
     const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);
-    g.drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);
-    S.foto=c.toDataURL('image/jpeg',.8);S.fotoMini='';render();
+    g.imageSmoothingQuality='high';g.drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);
+    S.foto=c.toDataURL('image/jpeg',.88);S.fotoMini='';render();
   };
   img.onerror=()=>alert('Não consegui abrir essa imagem.');
   img.src=url;
