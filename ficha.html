@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pactuados — Ficha</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--red:#c4121a;--dark:#1b1b1b;--paper:#fff;--bg:#ecebe8;--line:#d9d6d0;--mut:#6f6b66}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:#000;color:var(--dark);font-family:'Courier Prime',monospace;font-size:15px;min-height:100vh;position:relative;overflow-x:hidden}
+#fx{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+main{position:relative;z-index:1;max-width:980px;margin:28px auto;padding:0 12px}
+.sheet{background:var(--paper);border:3px solid var(--dark);outline:2px solid var(--red);outline-offset:4px;box-shadow:8px 8px 0 var(--red);padding:22px 24px 28px}
+h1{font-family:Anton,sans-serif;font-weight:400;font-size:clamp(46px,9vw,84px);line-height:1;margin:0;letter-spacing:.04em}
+h1 span{color:var(--red)}
+.sub{color:var(--mut);margin:4px 0 18px;border-bottom:4px solid var(--red);padding-bottom:12px}
+h2{font-family:Anton,sans-serif;font-weight:400;font-size:24px;letter-spacing:.06em;margin:22px 0 10px;padding-left:10px;border-left:8px solid var(--red)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+label{display:block;font-size:12px;color:var(--mut);font-weight:700}
+input,textarea{width:100%;font:inherit;color:var(--dark);background:#fff;border:0;border-bottom:2px solid var(--dark);padding:6px 4px;border-radius:0}
+textarea{border:2px solid var(--line);resize:vertical;min-height:60px}
+input:focus,textarea:focus,button:focus-visible{outline:2px solid var(--red);outline-offset:1px}
+.wide{grid-column:1/-1}
+nav{display:flex;flex-wrap:wrap;gap:6px;margin-top:20px;border-bottom:3px solid var(--dark)}
+nav button{font-family:Anton,sans-serif;font-size:18px;letter-spacing:.06em;background:#fff;border:2px solid var(--dark);border-bottom:0;padding:8px 18px;cursor:pointer}
+nav button.on{background:var(--red);color:#fff;border-color:var(--red)}
+.tab{display:none}.tab.on{display:block}
+button.b{font:inherit;font-weight:700;background:var(--dark);color:#fff;border:0;padding:6px 12px;cursor:pointer}
+button.b:hover{background:var(--red)}
+button.b:disabled{background:var(--line);color:var(--mut);cursor:not-allowed}
+button.sm{width:30px;padding:4px 0}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.box{border:2px solid var(--dark);padding:10px 12px}
+.box .big{font-family:Anton,sans-serif;font-size:38px;line-height:1.1}
+.box.red{border-color:var(--red)}.box.red .big{color:var(--red)}
+.row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.hint{font-size:12px;color:var(--mut)}
+.bad{color:var(--red);font-weight:700}
+.attr{display:grid;grid-template-columns:1fr auto;gap:6px 10px;align-items:center;border-bottom:1px dashed var(--line);padding:8px 0}
+.attr b{font-size:16px}
+.pips{display:flex;gap:3px;margin-top:3px}
+.pip{width:14px;height:14px;border:2px solid var(--dark)}
+.pip.f{background:var(--dark)}.pip.a{background:var(--red);border-color:var(--red)}
+.val{font-family:Anton,sans-serif;font-size:24px;min-width:26px;text-align:center}
+.item{border:2px solid var(--dark);padding:10px;margin-bottom:10px;display:grid;gap:8px;position:relative}
+.item.t{border-left:8px solid var(--red)}
+.item .top{display:grid;grid-template-columns:1fr auto;gap:8px}
+.item .top.q{grid-template-columns:1fr 90px auto}
+.x{background:none;border:2px solid var(--red);color:var(--red);font-weight:700;cursor:pointer;padding:4px 10px}
+.x:hover{background:var(--red);color:#fff}
+.origem label{text-align:center;font-size:14px}
+#info .origem input{font-size:16px;text-align:center;border:2px solid var(--dark);padding:5px 8px}
+.frac{display:flex;align-items:baseline;gap:6px;margin:4px 0 8px}
+.frac input{width:96px;font-family:Anton,sans-serif;font-size:52px;line-height:1;text-align:right;border:0;border-bottom:3px solid var(--dark);padding:0 4px}
+.frac input.bad{color:var(--red);border-color:var(--red)}
+.frac span{font-family:Anton,sans-serif;font-size:34px;color:var(--mut)}
+.cond{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.cond .box{border-width:3px}
+.cond .box.vit{border-color:var(--red)}
+.cp{border:3px solid var(--dark);background:#faf9f7}
+.cp-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;background:var(--dark);color:#fff;padding:10px 14px}
+.cp-head .n{font-family:Anton,sans-serif;font-size:34px;line-height:1}
+.cp-head .n.z{color:#9a9a9a}.cp-head .n.neg{color:#ff5b61}
+.cp-pips{display:flex;gap:4px;flex-wrap:wrap}
+.cp-pips i{width:16px;height:16px;border:2px solid #fff;display:block}
+.cp-pips i.u{background:var(--red);border-color:var(--red)}
+.cp-row{display:grid;grid-template-columns:1.1fr 1.4fr auto;gap:10px;align-items:center;padding:10px 14px;border-top:1px solid var(--line)}
+.cp-row b{font-family:Anton,sans-serif;font-size:20px;letter-spacing:.04em}
+.cp-calc{font-size:16px}.cp-calc em{font-style:normal;font-family:Anton,sans-serif;font-size:24px;color:var(--red)}
+.cp-hint{padding:8px 14px;font-size:12px;color:var(--mut);border-top:1px solid var(--line)}
+@media(max-width:640px){.cp-row{grid-template-columns:1fr auto}.cp-calc{grid-column:1/-1;order:3}}
+.pool{display:flex;align-items:center;gap:16px;border:3px solid var(--dark);border-left:12px solid var(--red);padding:10px 16px;margin-bottom:8px;background:#faf9f7}
+.pool .pn{font-family:Anton,sans-serif;font-size:72px;line-height:1;color:var(--red);min-width:70px;text-align:center}
+.pool .pn.z{color:var(--mut)}.pool .pn.bad{color:#fff;background:var(--red);padding:0 10px}
+.pool .pt{display:flex;flex-direction:column;gap:2px;color:var(--mut);font-size:13px}
+.pool .pt b{font-family:Anton,sans-serif;font-weight:400;font-size:22px;letter-spacing:.06em;color:var(--dark)}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;color:#fff}
+.bar a{color:#fff;font-weight:700;text-decoration:none;border:2px solid var(--red);padding:5px 12px}
+.bar a:hover{background:var(--red)}
+#stat{font-weight:700}#stat.ro{color:#ff7b80}
+.ro input,.ro textarea{background:#f4f4f2}
+.ro .tools{display:none}
+.tools{margin-top:22px;display:flex;gap:8px;flex-wrap:wrap}
+@media(max-width:640px){.sheet{padding:16px 14px}}
+</style>
+</head>
+<body class="ro">
+<canvas id="fx"></canvas>
+<main>
+<div class="bar"><a href="index.html">← Hub da mesa</a><span id="stat">Carregando…</span></div>
+<div class="sheet">
+  <h1>PACTU<span>ADOS</span></h1>
+  <p class="sub">Ficha de personagem · Chainsaw Man RPG</p>
+
+  <div class="grid" id="info">
+    <div class="wide"><label>Nome</label><input data-k="nome"></div>
+    <div><label>Idade</label><input data-k="idade" inputmode="numeric"></div>
+    <div><label>Categoria (CAT, de 1 a 10)</label><input data-k="cat" type="number" min="1" max="10" value="1"></div>
+    <div><label>Divisão</label><input data-k="divisao"></div>
+    <div><label>Organização</label><input data-k="org"></div>
+    <div><label>Crédito</label><input data-k="credito"></div>
+    <div class="wide origem"><label>Origem</label><input data-k="origem"></div>
+  </div>
+
+  <nav id="nav">
+    <button class="on" data-t="ficha">Ficha</button>
+    <button data-t="traits">Traits</button>
+    <button data-t="inv">Inventário</button>
+    <button data-t="pod">Poderes</button>
+  </nav>
+
+  <section class="tab on" id="ficha">
+    <h2>Condições</h2>
+    <div class="cond" id="stats"></div>
+    <h2>Pontos de Categoria</h2>
+    <div class="cp" id="cpanel"></div>
+    <h2>Avanço</h2>
+    <div class="stats" id="adv"></div>
+    <h2>Atributos</h2>
+    <div class="hint" id="attrhint"></div>
+    <div id="attrs"></div>
+  </section>
+
+  <section class="tab" id="traits">
+    <h2>Traits</h2>
+    <p class="hint">Cada trait custa 1 ponto de avanço. Pontos disponíveis: <b id="advA1">0</b></p>
+    <button class="b" id="addTrait">Adquirir trait (−1 avanço)</button>
+    <div id="traitList" style="margin-top:12px"></div>
+  </section>
+
+  <section class="tab" id="inv">
+    <h2>Inventário</h2>
+    <button class="b" id="addItem">Adicionar item</button>
+    <div id="itemList" style="margin-top:12px"></div>
+  </section>
+
+  <section class="tab" id="pod">
+    <h2>Poderes</h2>
+    <button class="b" id="addPow">Adicionar poder</button>
+    <div id="powList" style="margin-top:12px"></div>
+  </section>
+
+  <div class="tools">
+    <button class="b" id="exp">Exportar ficha (.json)</button>
+    <button class="b" id="imp">Importar ficha</button>
+    <button class="b" id="reset">Limpar tudo</button>
+    <input type="file" id="file" accept=".json" hidden>
+  </div>
+  <p class="hint">A ficha é salva automaticamente neste navegador.</p>
+</div>
+</main>
+
+<script>
+const ATTRS=[
+['forca','Força','poder físico e impacto corporal'],
+['coordenacao','Coordenação','precisão motora'],
+['atletismo','Atletismo','resistência física, corrida e reflexos'],
+['labia','Lábia','manipulação social, carisma e persuasão'],
+['observacao','Observação','percepção de detalhes e atenção'],
+['furtividade','Furtividade','agir sem ser percebido'],
+['intelecto','Intelecto','raciocínio, conhecimento e estratégia'],
+['vontade','Vontade','força mental, emocional e espiritual'],
+['constituicao','Constituição','resistência física e tolerância à dor']];
+const KEY='pactuados-ficha-v1';
+const fresh=()=>({info:{cat:1},attr:{},cp:{vit:0,pec:0,ago:0},vitNow:null,pecNow:null,agoNow:0,xp:0,adv:0,traits:[],items:[],pows:[]});
+let S=fresh();
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+const save=()=>{window.__dirty&&window.__dirty()};
+const fillInfo=()=>document.querySelectorAll('#info [data-k]').forEach(el=>{el.value=S.info[el.dataset.k]??''});
+const cat=()=>Math.min(10,Math.max(1,parseInt(S.info.cat)||1));
+const A=k=>S.attr[k]||(S.attr[k]={b:0,a:0});
+const sum=f=>ATTRS.reduce((t,a)=>t+f(A(a[0])),0);
+const vitMax=()=>8+2*(cat()-1)+S.cp.vit;
+const pecMax=()=>10+S.cp.pec;
+const xpNeed=()=>4+2*(cat()-1);
+const poolTotal=()=>6+2*(cat()-1);
+const poolLeft=()=>poolTotal()-sum(a=>a.b);
+const cpLeft=()=>(cat()-1)-(S.cp.vit+S.cp.pec+S.cp.ago);
+const NOW={vit:'vitNow',pec:'pecNow',ago:'agoNow'};
+const MAX={vit:vitMax,pec:pecMax,ago:()=>3+S.cp.ago};
+const cur=k=>S[NOW[k]]===null?(k==='ago'?0:MAX[k]()):S[NOW[k]];
+const advLeft=()=>S.adv-S.traits.length-sum(a=>a.a);
+
+function render(){
+  const c=cat();
+  const defs=[['vit','Vitalidade','box vit'],['pec','Pecado','box'],['ago','Agonia','box']];
+  defs.forEach(([k])=>{const n=NOW[k],m=MAX[k]();if(S[n]!==null&&S[n]>m)S[n]=m});
+  $('stats').innerHTML=defs.map(([k,l,cls])=>{
+    const m=MAX[k](),v=cur(k);
+    return `<div class="${cls}"><label>${l}</label>
+     <div class="frac"><input type="number" step="1" class="${v<0?'bad':''}" data-now="${k}" value="${v}" aria-label="${l} atual"><span>/ ${m}</span></div>
+     <div class="row"><button class="b sm" data-nw="${k}" data-d="-1">−</button><button class="b sm" data-nw="${k}" data-d="1" ${v>=m?'disabled':''}>+</button></div></div>`}).join('');
+  const total=c-1,left=cpLeft();
+  let pips='';for(let i=0;i<Math.max(total,0);i++)pips+=`<i class="${i<total-left?'u':''}"></i>`;
+  const crow=(k,l,base)=>`<div class="cp-row"><b>${l}</b>
+    <div class="cp-calc">${base} base + <b style="font-size:inherit">${S.cp[k]}</b> gastos = <em>${base+S.cp[k]}</em></div>
+    <div class="row"><button class="b sm" data-cp="${k}" data-d="-1" ${S.cp[k]<1?'disabled':''}>−</button>
+    <button class="b sm" data-cp="${k}" data-d="1" ${left<1?'disabled':''}>+</button></div></div>`;
+  $('cpanel').innerHTML=`<div class="cp-head"><div><div style="font-size:13px">Disponíveis para gastar</div>
+    <div class="n ${left<0?'neg':left===0?'z':''}">${left} <span style="font-size:18px">de ${total}</span></div></div>
+    <div class="cp-pips" title="vermelho = gasto">${pips||'<span style="font-size:13px">Suba de CAT para ganhar pontos</span>'}</div></div>
+    ${crow('vit','Vitalidade',8+2*(c-1))}${crow('pec','Pecado',10)}${crow('ago','Agonia',3)}
+    <div class="cp-hint">Você ganha 1 ponto a cada CAT acima de 1. Cada ponto gasto soma +1 no máximo da condição.</div>`;
+  $('adv').innerHTML=`
+   <div class="box"><label>XP</label><div class="big">${S.xp} / ${xpNeed()}</div>
+     <div class="row"><button class="b sm" data-xp="-1">−</button><button class="b sm" data-xp="1">+</button>
+     <button class="b" id="conv" ${S.xp<xpNeed()?'disabled':''}>Converter em avanço</button></div>
+     <div class="hint">Meta: 4 de XP no CAT 1, +2 por CAT</div></div>
+   <div class="box red"><label>Pontos de avanço</label><div class="big ${advLeft()<0?'bad':''}">${advLeft()}</div>
+     <div class="hint">Total ganho: ${S.adv}. Gaste em atributos (★) ou traits.</div></div>`;
+  $('advA1').textContent=advLeft();
+  const pl=poolLeft();
+  $('attrhint').innerHTML=`<div class="pool"><div class="pn ${pl<0?'bad':pl===0?'z':''}">${pl}</div>
+    <div class="pt"><b>Pontos restantes</b><span>de ${poolTotal()} no total · limite por atributo: ${c}</span><span>6 iniciais, +2 a cada CAT acima de 1</span></div></div>`
+  $('attrs').innerHTML=ATTRS.map(([k,n,d])=>{
+    const a=A(k), v=a.b+a.a, over=v>c;
+    let pips='';for(let i=1;i<=10;i++)pips+=`<div class="pip ${i<=a.b?'f':i<=v?'a':''}" ${i>c?'style="opacity:.25"':''}></div>`;
+    return `<div class="attr"><div><b>${n}</b> <span class="hint">${d}</span><div class="pips">${pips}</div></div>
+     <div class="row"><button class="b sm" data-a="${k}" data-d="-1" ${a.b<1?'disabled':''}>−</button>
+     <span class="val ${over?'bad':''}">${v}</span>
+     <button class="b sm" data-a="${k}" data-d="1" ${pl<1||v>=c?'disabled':''}>+</button>
+     <button class="b sm" title="Gastar 1 ponto de avanço" data-a="${k}" data-d="star" ${advLeft()<1||v>=c?'disabled':''}>★</button>
+     <button class="b sm" title="Devolver ponto de avanço" data-a="${k}" data-d="unstar" ${a.a<1?'disabled':''}>↺</button></div></div>`}).join('');
+  $('addTrait').disabled=advLeft()<1;
+  save();
+}
+
+function lists(){
+  $('traitList').innerHTML=S.traits.map((t,i)=>`<div class="item t">
+    <div class="top"><div><label>Nome da trait</label><input data-l="traits" data-i="${i}" data-f="n" value="${esc(t.n)}"></div>
+    <button class="x" data-rm="traits" data-i="${i}">Remover</button></div>
+    <div><label>Descrição</label><textarea data-l="traits" data-i="${i}" data-f="d">${esc(t.d)}</textarea></div></div>`).join('')
+    ||'<p class="hint">Nenhuma trait adquirida.</p>';
+  $('itemList').innerHTML=S.items.map((t,i)=>`<div class="item">
+    <div class="top q"><div><label>Item</label><input data-l="items" data-i="${i}" data-f="n" value="${esc(t.n)}"></div>
+    <div><label>Qtd.</label><input type="number" min="0" data-l="items" data-i="${i}" data-f="q" value="${esc(t.q??1)}"></div>
+    <button class="x" data-rm="items" data-i="${i}">Remover</button></div>
+    <div><label>Descrição</label><textarea data-l="items" data-i="${i}" data-f="d">${esc(t.d)}</textarea></div></div>`).join('')
+    ||'<p class="hint">Inventário vazio.</p>';
+  $('powList').innerHTML=S.pows.map((t,i)=>`<div class="item t">
+    <div class="top"><div><label>Poder</label><input data-l="pows" data-i="${i}" data-f="n" value="${esc(t.n)}"></div>
+    <button class="x" data-rm="pows" data-i="${i}">Remover</button></div>
+    <div><label>Descrição / custo / efeito</label><textarea data-l="pows" data-i="${i}" data-f="d">${esc(t.d)}</textarea></div></div>`).join('')
+    ||'<p class="hint">Nenhum poder registrado.</p>';
+}
+
+// info
+document.querySelectorAll('#info [data-k]').forEach(el=>{
+  el.value=S.info[el.dataset.k]??'';
+  el.addEventListener('input',()=>{
+    let v=el.value;
+    S.info[el.dataset.k]=v;
+    if(el.dataset.k==='cat'&&v!==''){render()}else save();
+  });
+});
+$('info').querySelector('[data-k=cat]').addEventListener('change',e=>{
+  const c=cat();e.target.value=c;S.info.cat=c;render();
+});
+// tabs
+$('nav').addEventListener('click',e=>{
+  const t=e.target.dataset.t;if(!t)return;
+  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b===e.target));
+  document.querySelectorAll('.tab').forEach(s=>s.classList.toggle('on',s.id===t));
+});
+// clicks
+document.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  const d=b.dataset;
+  if(d.cp){S.cp[d.cp]+=+d.d;if(d.cp!=='ago'&&S[NOW[d.cp]]!==null)S[NOW[d.cp]]+=+d.d;render()}
+  else if(d.nw){S[NOW[d.nw]]=Math.min(MAX[d.nw](),cur(d.nw)+ +d.d);render()}
+  else if(d.xp){S.xp=Math.max(0,S.xp+ +d.xp);render()}
+  else if(b.id==='conv'){if(S.xp>=xpNeed()){S.xp-=xpNeed();S.adv++;render()}}
+  else if(d.a){const a=A(d.a);if(d.d==='star'){if(advLeft()>0)a.a++}else if(d.d==='unstar'){if(a.a>0)a.a--}else a.b+=+d.d;render()}
+  else if(d.rm){S[d.rm].splice(+d.i,1);lists();render()}
+});
+$('addTrait').onclick=()=>{if(advLeft()>0){S.traits.push({n:'',d:''});lists();render()}};
+$('addItem').onclick=()=>{S.items.push({n:'',q:1,d:''});lists();save()};
+$('addPow').onclick=()=>{S.pows.push({n:'',d:''});lists();save()};
+document.addEventListener('input',e=>{
+  const d=e.target.dataset;if(!d.l)return;
+  S[d.l][+d.i][d.f]=e.target.value;save();
+});
+document.addEventListener('change',e=>{
+  const k=e.target.dataset.now;if(!k)return;
+  const v=parseInt(e.target.value);
+  S[NOW[k]]=isNaN(v)?cur(k):Math.min(v,MAX[k]());render();
+});
+// export / import / reset
+$('exp').onclick=()=>{
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(S,null,2)],{type:'application/json'}));
+  a.download=(S.info.nome||'pactuado')+'.json';a.click();URL.revokeObjectURL(a.href);
+};
+$('imp').onclick=()=>$('file').click();
+$('file').onchange=e=>{
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{try{S=Object.assign(fresh(),JSON.parse(r.result));fillInfo();lists();render()}catch(x){alert('Arquivo inválido.')}};
+  r.readAsText(f);
+};
+let rsT=null;
+$('reset').onclick=()=>{
+  const btn=$('reset');
+  if(!rsT){
+    btn.textContent='Clique de novo para confirmar';
+    btn.style.background='var(--red)';
+    rsT=setTimeout(()=>{rsT=null;btn.textContent='Limpar tudo';btn.style.background=''},4000);
+    return;
+  }
+  clearTimeout(rsT);rsT=null;btn.textContent='Limpar tudo';btn.style.background='';
+  try{localStorage.removeItem(KEY)}catch(e){}
+  S=fresh();
+  document.querySelectorAll('#info [data-k]').forEach(el=>{el.value=S.info[el.dataset.k]??''});
+  lists();render();
+  document.querySelector('#nav [data-t=ficha]').click();
+  window.scrollTo(0,0);
+};
+
+lists();render();
+// partículas vermelhas
+(function(){
+  const cv=$('fx'),g=cv.getContext('2d');
+  const calm=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let W,H,P=[];
+  const mk=()=>({x:Math.random()*W,y:Math.random()*H,r:Math.random()*2.2+.6,v:Math.random()*.35+.08,
+    dx:(Math.random()-.5)*.25,a:Math.random()*.6+.2,t:Math.random()*6.28});
+  function size(){W=cv.width=innerWidth;H=cv.height=innerHeight;P=Array.from({length:Math.round(W*H/16000)},mk)}
+  function draw(){
+    g.clearRect(0,0,W,H);
+    for(const p of P){
+      if(!calm){p.y-=p.v;p.x+=p.dx;p.t+=.02;if(p.y<-5){p.y=H+5;p.x=Math.random()*W}}
+      const al=p.a*(.6+.4*Math.sin(p.t));
+      g.beginPath();g.arc(p.x,p.y,p.r,0,6.283);
+      g.fillStyle=`rgba(220,20,30,${al})`;g.shadowColor='#c4121a';g.shadowBlur=8;g.fill();
+    }
+    if(!calm)requestAnimationFrame(draw);
+  }
+  addEventListener('resize',()=>{size();if(calm)draw()});
+  size();draw();
+})();
+</script>
+<script type="module">
+import {entrar,meuPapel,db,doc,onSnapshot,updateDoc,serverTimestamp} from './firebase.js';
+const id=new URLSearchParams(location.search).get('id');
+if(!id)location.href='index.html';
+const u=await entrar(), papel=await meuPapel(u.uid);
+if(!papel)location.href='index.html';
+const ref=doc(db,'fichas',id);
+let canEdit=false,applying=false,timer=null,lastJSON='';
+const lock=()=>document.querySelectorAll('#info,.tab,.tools').forEach(e=>e.inert=!canEdit);
+lock();
+onSnapshot(ref,snap=>{
+  if(!snap.exists()){document.body.innerHTML='<p style="color:#fff;padding:30px">Ficha não encontrada. <a style="color:#fff" href="index.html">Voltar</a></p>';return}
+  const f=snap.data();
+  canEdit=f.dono===u.uid||papel==='mestre';
+  document.body.classList.toggle('ro',!canEdit);lock();
+  const st=$('stat');
+  st.className=canEdit?'':'ro';
+  st.textContent=canEdit?(f.dono===u.uid?'Sua ficha · salva automaticamente':'Modo mestre · salva automaticamente'):'Somente leitura (ficha de outro jogador)';
+  if(snap.metadata.hasPendingWrites||timer)return;
+  const j=JSON.stringify(f.dados||{});if(j===lastJSON)return;lastJSON=j;
+  applying=true;
+  S=Object.assign(fresh(),f.dados||{});S.info=S.info||{cat:1};
+  const ae=document.activeElement;
+  document.querySelectorAll('#info [data-k]').forEach(el=>{if(el!==ae)el.value=S.info[el.dataset.k]??''});
+  if(!(ae&&ae.closest&&ae.closest('#traitList,#itemList,#powList')))lists();
+  render();applying=false;
+},e=>{$('stat').textContent='Sem permissão ou erro: '+e.code});
+window.__dirty=()=>{
+  if(applying||!canEdit)return;
+  clearTimeout(timer);
+  timer=setTimeout(async()=>{
+    timer=null;
+    const d=JSON.parse(JSON.stringify(S));lastJSON=JSON.stringify(d);
+    try{await updateDoc(ref,{dados:d,atualizada:serverTimestamp(),
+      resumo:{nome:S.info.nome||'',cat:cat(),vit:cur('vit'),vitMax:vitMax(),pec:cur('pec'),pecMax:pecMax(),ago:cur('ago'),agoMax:MAX.ago()}})}
+    catch(e){$('stat').textContent='Erro ao salvar: '+e.code}
+  },600);
+};
+</script>
+</body>
+</html>
