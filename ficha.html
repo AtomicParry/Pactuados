@@ -369,13 +369,13 @@ $('reset').onclick=()=>{
 let mkBusy=false;
 function mini(src,cb){
   const im=new Image();
-  im.onload=()=>{const r=Math.min(1,180/Math.max(im.width,im.height)),c=document.createElement('canvas');
+  im.onload=()=>{const r=Math.min(1,320/Math.max(im.width,im.height)),c=document.createElement('canvas');
     c.width=Math.round(im.width*r);c.height=Math.round(im.height*r);
-    c.getContext('2d').drawImage(im,0,0,c.width,c.height);cb(c.toDataURL('image/jpeg',.7))};
+    c.getContext('2d').drawImage(im,0,0,c.width,c.height);cb(c.toDataURL('image/jpeg',.75))};
   im.onerror=()=>cb('');im.src=src;
 }
 function showFoto(){
-  if(S.foto&&!S.fotoMini&&!mkBusy){mkBusy=true;mini(S.foto,m=>{S.fotoMini=m;mkBusy=false;if(m)save()})}
+  if(S.foto&&(!S.fotoMini||S.miniV!==2)&&!mkBusy){mkBusy=true;mini(S.foto,m=>{S.fotoMini=m;S.miniV=2;mkBusy=false;if(m)save()})}
   const i=$('fotoImg');i.src=S.foto||'';
   i.style.display=S.foto?'block':'none';
   $('fotoVazio').style.display=S.foto?'none':'block';
