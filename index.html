@@ -28,6 +28,10 @@ input:focus,button:focus-visible{outline:2px solid var(--red);outline-offset:2px
 .card.mine{border-color:var(--red)}
 .card a.open{color:inherit;text-decoration:none}
 .card .nm{font-family:Anton,sans-serif;font-size:26px;letter-spacing:.04em;line-height:1.1;word-break:break-word}
+.pic{display:flex;gap:12px;align-items:flex-start}
+.ph{width:84px;aspect-ratio:3/4;flex:none;border:2px solid var(--dark);background:#eee;display:flex;overflow:hidden}
+.ph img{width:100%;height:100%;object-fit:cover}
+.ph span{margin:auto;font-family:Anton,sans-serif;font-size:12px;color:#aaa;text-align:center}
 .card .cat{color:var(--red);font-weight:700}
 .st{display:flex;gap:10px;flex-wrap:wrap}
 .st div{border:2px solid var(--dark);padding:4px 8px;text-align:center;min-width:70px}
@@ -164,9 +168,10 @@ function desenha(){
   $('list').innerHTML=arr.map(f=>{
     const r=f.resumo||{},mine=f.dono===u.uid,can=mine||papel==='mestre';
     const box=(l,v,m)=>`<div class="${v<0?'neg':''}"><small>${l}</small><b>${v}/${m}</b></div>`;
-    return `<div class="card ${mine?'mine':''}"><a class="open" href="ficha.html?id=${f.id}">
-      <div class="nm">${esc(r.nome)||'Sem nome'}</div>
-      <div class="cat">CAT ${r.cat??1}${mine?' · sua ficha':f.donoNome?' · de '+esc(f.donoNome):''}</div></a>
+    return `<div class="card ${mine?'mine':''}"><a class="open pic" href="ficha.html?id=${f.id}">
+      <div class="ph">${r.foto?`<img src="${esc(r.foto)}" alt="">`:'<span>SEM<br>FOTO</span>'}</div>
+      <div><div class="nm">${esc(r.nome)||'Sem nome'}</div>
+      <div class="cat">CAT ${r.cat??1}${mine?' · sua ficha':f.donoNome?' · de '+esc(f.donoNome):''}</div></div></a>
       <div class="st">${box('VIT',r.vit??0,r.vitMax??0)}${box('PEC',r.pec??0,r.pecMax??0)}${box('AGO',r.ago??0,r.agoMax??0)}</div>
       <div class="hint">${can?'Você pode editar':'Somente leitura'}</div>
       ${can?`<button class="x" data-del="${f.id}">Excluir</button>`:''}</div>`}).join('')
