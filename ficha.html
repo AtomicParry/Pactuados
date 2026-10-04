@@ -118,10 +118,10 @@ button.sm{width:30px;padding:4px 0}
     <div class="wide"><label>Nome</label><input data-k="nome"></div>
     <div><label>Idade</label><input data-k="idade" inputmode="numeric"></div>
     <div><label>Categoria (CAT, de 1 a 10)</label><input data-k="cat" type="number" min="1" max="10" value="1"></div>
+    <div><label>Classe social</label><input data-k="classe"></div>
     <div><label>Divisão</label><input data-k="divisao"></div>
     <div><label>Organização</label><input data-k="org"></div>
     <div><label>Crédito</label><input data-k="credito"></div>
-    <div><label>Agenda</label><input data-k="agenda"></div>
     <div class="wide origem"><label>Origem</label><input data-k="origem"></div>
   </div>
   </div>
@@ -131,6 +131,7 @@ button.sm{width:30px;padding:4px 0}
     <button data-t="traits">Traits</button>
     <button data-t="inv">Inventário</button>
     <button data-t="pod">Poderes</button>
+    <button data-t="agenda">Agenda</button>
   </nav>
 
   <section class="tab on" id="ficha">
@@ -164,6 +165,17 @@ button.sm{width:30px;padding:4px 0}
     <div id="powList" style="margin-top:12px"></div>
   </section>
 
+  <section class="tab" id="agenda">
+    <h2>Agenda</h2>
+    <div class="grid">
+      <div class="wide"><label>Nome da agenda</label><input data-ag="nome"></div>
+      <div class="wide"><label>Objetivo</label><textarea data-ag="objetivo" rows="3"></textarea></div>
+    </div>
+    <h2>Poderes da agenda</h2>
+    <button class="b" id="addAgPow">Adicionar poder da agenda</button>
+    <div id="agPowList" style="margin-top:12px"></div>
+  </section>
+
   <div class="tools">
     <button class="b" id="exp">Exportar ficha (.json)</button>
     <button class="b" id="imp">Importar ficha</button>
@@ -186,12 +198,16 @@ const ATTRS=[
 ['vontade','Vontade','força mental, emocional e espiritual'],
 ['constituicao','Constituição','resistência física e tolerância à dor']];
 const KEY='pactuados-ficha-v1';
-const fresh=()=>({info:{cat:1},foto:'',attr:{},cp:{vit:0,pec:0,ago:0},vitNow:null,pecNow:null,agoNow:0,xp:0,adv:0,traits:[],items:[],pows:[]});
+const fresh=()=>({info:{cat:1},foto:'',fotoMini:'',agenda:{nome:'',objetivo:'',poderes:[]},attr:{},cp:{vit:0,pec:0,ago:0},vitNow:null,pecNow:null,agoNow:0,xp:0,adv:0,traits:[],items:[],pows:[]});
 let S=fresh();
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
 const save=()=>{window.__dirty&&window.__dirty()};
-const fillInfo=()=>document.querySelectorAll('#info [data-k]').forEach(el=>{el.value=S.info[el.dataset.k]??''});
+const LIST=k=>k==='ap'?S.agenda.poderes:S[k];
+const fillInfo=skip=>{
+  document.querySelectorAll('#info [data-k]').forEach(el=>{if(el!==skip)el.value=S.info[el.dataset.k]??''});
+  document.querySelectorAll('[data-ag]').forEach(el=>{if(el!==skip)el.value=(S.agenda||{})[el.dataset.ag]??''});
+};
 const cat=()=>Math.min(10,Math.max(1,parseInt(S.info.cat)||1));
 const A=k=>S.attr[k]||(S.attr[k]={b:0,a:0});
 const sum=f=>ATTRS.reduce((t,a)=>t+f(A(a[0])),0);
@@ -251,6 +267,12 @@ function render(){showFoto();
 }
 
 function lists(){
+  if(!S.agenda)S.agenda={nome:'',objetivo:'',poderes:[]};
+  $('agPowList').innerHTML=S.agenda.poderes.map((t,i)=>`<div class="item t">
+    <div class="top"><div><label>Poder da agenda</label><input data-l="ap" data-i="${i}" data-f="n" value="${esc(t.n)}"></div>
+    <button class="x" data-rm="ap" data-i="${i}">Remover</button></div>
+    <div><label>Descrição / custo / efeito</label><textarea data-l="ap" data-i="${i}" data-f="d">${esc(t.d)}</textarea></div></div>`).join('')
+    ||'<p class="hint">Nenhum poder de agenda registrado.</p>';
   $('traitList').innerHTML=S.traits.map((t,i)=>`<div class="item t">
     <div class="top"><div><label>Nome da trait</label><input data-l="traits" data-i="${i}" data-f="n" value="${esc(t.n)}"></div>
     <button class="x" data-rm="traits" data-i="${i}">Remover</button></div>
@@ -296,14 +318,17 @@ document.addEventListener('click',e=>{
   else if(d.xp){S.xp=Math.max(0,S.xp+ +d.xp);render()}
   else if(b.id==='conv'){if(S.xp>=xpNeed()){S.xp-=xpNeed();S.adv++;render()}}
   else if(d.a){const a=A(d.a);if(d.d==='star'){if(advLeft()>0)a.a++}else if(d.d==='unstar'){if(a.a>0)a.a--}else a.b+=+d.d;render()}
-  else if(d.rm){S[d.rm].splice(+d.i,1);lists();render()}
+  else if(d.rm){LIST(d.rm).splice(+d.i,1);lists();render()}
 });
 $('addTrait').onclick=()=>{if(advLeft()>0){S.traits.push({n:'',d:''});lists();render()}};
 $('addItem').onclick=()=>{S.items.push({n:'',q:1,d:''});lists();save()};
+$('addAgPow').onclick=()=>{S.agenda.poderes.push({n:'',d:''});lists();save()};
 $('addPow').onclick=()=>{S.pows.push({n:'',d:''});lists();save()};
 document.addEventListener('input',e=>{
-  const d=e.target.dataset;if(!d.l)return;
-  S[d.l][+d.i][d.f]=e.target.value;save();
+  const d=e.target.dataset;
+  if(d.ag){S.agenda[d.ag]=e.target.value;save();return}
+  if(!d.l)return;
+  LIST(d.l)[+d.i][d.f]=e.target.value;save();
 });
 document.addEventListener('change',e=>{
   const k=e.target.dataset.now;if(!k)return;
@@ -335,20 +360,29 @@ $('reset').onclick=()=>{
   clearTimeout(rsT);rsT=null;btn.textContent='Limpar tudo';btn.style.background='';
   try{localStorage.removeItem(KEY)}catch(e){}
   S=fresh();
-  document.querySelectorAll('#info [data-k]').forEach(el=>{el.value=S.info[el.dataset.k]??''});
+  fillInfo();
   lists();render();
   document.querySelector('#nav [data-t=ficha]').click();
   window.scrollTo(0,0);
 };
 
+let mkBusy=false;
+function mini(src,cb){
+  const im=new Image();
+  im.onload=()=>{const r=Math.min(1,180/Math.max(im.width,im.height)),c=document.createElement('canvas');
+    c.width=Math.round(im.width*r);c.height=Math.round(im.height*r);
+    c.getContext('2d').drawImage(im,0,0,c.width,c.height);cb(c.toDataURL('image/jpeg',.7))};
+  im.onerror=()=>cb('');im.src=src;
+}
 function showFoto(){
+  if(S.foto&&!S.fotoMini&&!mkBusy){mkBusy=true;mini(S.foto,m=>{S.fotoMini=m;mkBusy=false;if(m)save()})}
   const i=$('fotoImg');i.src=S.foto||'';
   i.style.display=S.foto?'block':'none';
   $('fotoVazio').style.display=S.foto?'none':'block';
   $('fotoDel').disabled=!S.foto;
 }
 $('fotoBtn').onclick=()=>$('fotoFile').click();
-$('fotoDel').onclick=()=>{S.foto='';render()};
+$('fotoDel').onclick=()=>{S.foto='';S.fotoMini='';render()};
 $('fotoFile').onchange=e=>{
   const f=e.target.files[0];e.target.value='';if(!f)return;
   const img=new Image(),url=URL.createObjectURL(f);
@@ -357,7 +391,7 @@ $('fotoFile').onchange=e=>{
     c.width=Math.round(img.width*r);c.height=Math.round(img.height*r);
     const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);
     g.drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);
-    S.foto=c.toDataURL('image/jpeg',.8);render();
+    S.foto=c.toDataURL('image/jpeg',.8);S.fotoMini='';render();
   };
   img.onerror=()=>alert('Não consegui abrir essa imagem.');
   img.src=url;
@@ -410,8 +444,8 @@ onSnapshot(ref,snap=>{
   applying=true;
   S=Object.assign(fresh(),f.dados||{});S.info=S.info||{cat:1};
   const ae=document.activeElement;
-  document.querySelectorAll('#info [data-k]').forEach(el=>{if(el!==ae)el.value=S.info[el.dataset.k]??''});
-  if(!(ae&&ae.closest&&ae.closest('#traitList,#itemList,#powList')))lists();
+  fillInfo(ae);
+  if(!(ae&&ae.closest&&ae.closest('#traitList,#itemList,#powList,#agPowList')))lists();
   render();applying=false;
 },e=>{$('stat').textContent='Sem permissão ou erro: '+e.code});
 window.__dirty=()=>{
@@ -421,7 +455,7 @@ window.__dirty=()=>{
     timer=null;
     const d=JSON.parse(JSON.stringify(S));lastJSON=JSON.stringify(d);
     try{await updateDoc(ref,{dados:d,atualizada:serverTimestamp(),
-      resumo:{nome:S.info.nome||'',cat:cat(),vit:cur('vit'),vitMax:vitMax(),pec:cur('pec'),pecMax:pecMax(),ago:cur('ago'),agoMax:MAX.ago()}})}
+      resumo:{nome:S.info.nome||'',cat:cat(),vit:cur('vit'),vitMax:vitMax(),pec:cur('pec'),pecMax:pecMax(),ago:cur('ago'),agoMax:MAX.ago(),foto:S.fotoMini||''}})}
     catch(e){$('stat').textContent='Erro ao salvar: '+e.code}
   },600);
 };
