@@ -58,6 +58,29 @@ input:focus,button:focus-visible{outline:2px solid var(--red);outline-offset:2px
 .b.o{background:#fff;color:var(--dark);border:2px solid var(--dark)}
 .b.o:hover{background:var(--red);border-color:var(--red);color:#fff}
 .hello{font-size:17px}
+.list{gap:22px;grid-template-columns:repeat(auto-fill,minmax(330px,1fr))}
+.card{display:grid;grid-template-columns:140px 1fr;gap:6px 16px;padding:14px;background:#fff;border:3px solid var(--dark);box-shadow:5px 5px 0 var(--red);transition:transform .12s,box-shadow .12s}
+.card:hover{transform:translate(-2px,-2px);box-shadow:8px 8px 0 var(--red)}
+.card.mine{border-color:var(--red);box-shadow:5px 5px 0 var(--dark)}
+.card.mine:hover{box-shadow:8px 8px 0 var(--dark)}
+.card .ph{position:relative;width:100%;height:auto;aspect-ratio:3/4;border:2px solid var(--dark);margin:0}
+.card .catb{position:absolute;left:0;bottom:0;background:var(--red);color:#fff;font-style:normal;font-family:Anton,sans-serif;letter-spacing:.08em;font-size:15px;padding:2px 10px}
+.card .side{display:flex;flex-direction:column;gap:12px;min-width:0}
+.card .nm{font-size:27px;line-height:1.05;text-transform:uppercase;letter-spacing:.03em}
+.card .own{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin-top:4px}
+.card .own.me{color:var(--red);font-weight:700}
+.card .st{display:flex;flex-direction:column;flex-wrap:nowrap;gap:9px}
+.card .st div{border:0;min-width:0;padding:0;text-align:left}
+.card .st .sr{display:flex;justify-content:space-between;align-items:baseline}
+.card .st small{display:inline;font-size:17px;font-weight:700;letter-spacing:.06em}
+.card .st b{font-family:Anton,sans-serif;font-weight:400;font-size:30px;line-height:1.1;letter-spacing:.03em;color:var(--dark)}
+.card .st b span{font-size:18px;color:var(--mut)}
+.card .st .bar{height:7px;background:#e8e5df;margin-top:2px}
+.card .st .bar i{display:block;height:100%}
+.card .st .v .bar i{background:#c4121a}.card .st .p .bar i{background:#111}.card .st .a .bar i{background:#7b2fbe}
+.card .st .neg b{color:var(--red);text-decoration:underline}
+.card .foot{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:8px;border-top:1px dashed var(--line);padding-top:10px;margin-top:6px}
+@media(max-width:420px){.card{grid-template-columns:110px 1fr}}
 </style>
 </head>
 <body>
@@ -175,15 +198,17 @@ function desenha(){
   const arr=[...fichas].sort((a,b)=>(b.dono===u.uid)-(a.dono===u.uid)||(a.resumo?.nome||'').localeCompare(b.resumo?.nome||''));
   $('list').innerHTML=arr.map(f=>{
     const r=f.resumo||{},mine=f.dono===u.uid,can=mine||papel==='mestre';
-    const box=(l,v,m,c)=>`<div class="${c} ${v<0?'neg':''}"><small>${l}</small><b>${v}/${m}</b></div>`;
+    const box=(l,v,m,c)=>`<div class="${c} ${v<0?'neg':''}"><div class="sr"><small>${l}</small><b>${v}<span>/${m}</span></b></div>
+      <div class="bar"><i style="width:${m>0?Math.max(0,Math.min(100,v/m*100)):0}%"></i></div></div>`;
     return `<div class="card ${mine?'mine':''}">
-      <div class="pic"><a class="ph" href="ficha.html?id=${f.id}">${r.foto?`<img src="${esc(r.foto)}" alt="">`:'<span>SEM FOTO</span>'}</a>
-      <div class="side"><a class="open" href="ficha.html?id=${f.id}"><div class="nm">${esc(r.nome)||'Sem nome'}</div>
-      <div class="cat">CAT ${r.cat??1}${mine?' · sua ficha':f.donoNome?' · de '+esc(f.donoNome):''}</div></a>
-      </div></div>
-      <div class="st">${box('VIT',r.vit??0,r.vitMax??0,'v')}${box('PEC',r.pec??0,r.pecMax??0,'p')}${box('AGO',r.ago??0,r.agoMax??0,'a')}</div>
-      <div class="hint">${can?'Você pode editar':'Somente leitura'}</div>
-      ${can?`<button class="x" data-del="${f.id}">Excluir</button>`:''}</div>`}).join('')
+      <a class="ph" href="ficha.html?id=${f.id}">${r.foto?`<img src="${esc(r.foto)}" alt="">`:'<span>SEM FOTO</span>'}<em class="catb">CAT ${r.cat??1}</em></a>
+      <div class="side">
+        <a class="open" href="ficha.html?id=${f.id}"><div class="nm">${esc(r.nome)||'Sem nome'}</div>
+        <div class="own ${mine?'me':''}">${mine?'Sua ficha':f.donoNome?'de '+esc(f.donoNome):'&nbsp;'}</div></a>
+        <div class="st">${box('VIT',r.vit??0,r.vitMax??0,'v')}${box('PEC',r.pec??0,r.pecMax??0,'p')}${box('AGO',r.ago??0,r.agoMax??0,'a')}</div>
+      </div>
+      <div class="foot"><span class="hint">${can?'Você pode editar':'Somente leitura'}</span>
+      ${can?`<button class="x" data-del="${f.id}">Excluir</button>`:''}</div></div>`}).join('')
     ||'<p class="hint">Nenhuma ficha ainda. Clique em "Nova ficha".</p>';
 }
 let delId=null,delT;
