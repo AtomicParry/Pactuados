@@ -91,6 +91,7 @@ button.sm{width:30px;padding:4px 0}
 .fframe img{width:100%;height:100%;object-fit:cover;display:none}
 #fotoVazio{margin:auto;font-family:Anton,sans-serif;letter-spacing:.08em;color:#aaa;font-size:20px}
 .fbtns{display:flex;gap:6px;justify-content:center;margin-top:10px}
+.row.mx{margin-top:6px;border-top:1px dashed var(--line);padding-top:6px}
 .fbtns .b{padding:5px 12px}
 .b.o{background:#fff;color:var(--dark);border:2px solid var(--dark)}
 .b.o:hover{background:var(--red);border-color:var(--red);color:#fff}
@@ -198,7 +199,7 @@ const ATTRS=[
 ['vontade','Vontade','força mental, emocional e espiritual'],
 ['constituicao','Constituição','resistência física e tolerância à dor']];
 const KEY='pactuados-ficha-v1';
-const fresh=()=>({info:{cat:1},foto:'',fotoMini:'',agenda:{nome:'',objetivo:'',poderes:[]},attr:{},cp:{vit:0,pec:0,ago:0},vitNow:null,pecNow:null,agoNow:0,xp:0,adv:0,traits:[],items:[],pows:[]});
+const fresh=()=>({info:{cat:1},foto:'',fotoMini:'',extra:{vit:0,pec:0},agenda:{nome:'',objetivo:'',poderes:[]},attr:{},cp:{vit:0,pec:0,ago:0},vitNow:null,pecNow:null,agoNow:0,xp:0,adv:0,traits:[],items:[],pows:[]});
 let S=fresh();
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
@@ -211,8 +212,8 @@ const fillInfo=skip=>{
 const cat=()=>Math.min(10,Math.max(1,parseInt(S.info.cat)||1));
 const A=k=>S.attr[k]||(S.attr[k]={b:0,a:0});
 const sum=f=>ATTRS.reduce((t,a)=>t+f(A(a[0])),0);
-const vitMax=()=>8+2*(cat()-1)+S.cp.vit;
-const pecMax=()=>10+S.cp.pec;
+const vitMax=()=>8+2*(cat()-1)+S.cp.vit+((S.extra||{}).vit||0);
+const pecMax=()=>10+S.cp.pec+((S.extra||{}).pec||0);
 const xpNeed=()=>4+2*(cat()-1);
 const poolTotal=()=>6+2*(cat()-1);
 const poolLeft=()=>poolTotal()-sum(a=>a.b);
@@ -230,7 +231,10 @@ function render(){showFoto();
     const m=MAX[k](),v=cur(k);
     return `<div class="${cls}"><label>${l}</label>
      <div class="frac"><input type="number" step="1" class="${v<0?'bad':''}" data-now="${k}" value="${v}" aria-label="${l} atual"><span>/ ${m}</span></div>
-     <div class="row"><button class="b sm" data-nw="${k}" data-d="-1">−</button><button class="b sm" data-nw="${k}" data-d="1" ${v>=m?'disabled':''}>+</button></div></div>`}).join('');
+     <div class="row"><button class="b sm" data-nw="${k}" data-d="-1">−</button><button class="b sm" data-nw="${k}" data-d="1" ${v>=m?'disabled':''}>+</button></div>
+     ${k==='ago'?'':`<div class="row mx"><span class="hint">Máximo manual: <b>+${(S.extra||{})[k]||0}</b></span>
+       <button class="b o sm" title="Diminuir o máximo" data-mx="${k}" data-d="-1" ${((S.extra||{})[k]||0)<1?'disabled':''}>−</button>
+       <button class="b o sm" title="Aumentar o máximo" data-mx="${k}" data-d="1">+</button></div>`}</div>`}).join('');
   const total=c-1,left=cpLeft();
   let pips='';for(let i=0;i<Math.max(total,0);i++)pips+=`<i class="${i<total-left?'u':''}"></i>`;
   const crow=(k,l,base)=>`<div class="cp-row"><b>${l}</b>
@@ -240,7 +244,7 @@ function render(){showFoto();
   $('cpanel').innerHTML=`<div class="cp-head"><div><div style="font-size:13px">Disponíveis para gastar</div>
     <div class="n ${left<0?'neg':left===0?'z':''}">${left} <span style="font-size:18px">de ${total}</span></div></div>
     <div class="cp-pips" title="vermelho = gasto">${pips||'<span style="font-size:13px">Suba de CAT para ganhar pontos</span>'}</div></div>
-    ${crow('vit','Vitalidade',8+2*(c-1))}${crow('pec','Pecado',10)}${crow('ago','Agonia',3)}
+    ${crow('vit','Vitalidade',8+2*(c-1)+((S.extra||{}).vit||0))}${crow('pec','Pecado',10+((S.extra||{}).pec||0))}${crow('ago','Agonia',3)}
     <div class="cp-hint">Você ganha 1 ponto a cada CAT acima de 1. Cada ponto gasto soma +1 no máximo da condição.</div>`;
   $('adv').innerHTML=`
    <div class="box"><label>XP</label><div class="big">${S.xp} / ${xpNeed()}</div>
@@ -314,6 +318,7 @@ document.addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;
   const d=b.dataset;
   if(d.cp){S.cp[d.cp]+=+d.d;if(d.cp!=='ago'&&S[NOW[d.cp]]!==null)S[NOW[d.cp]]+=+d.d;render()}
+  else if(d.mx){S.extra=S.extra||{vit:0,pec:0};const dl=+d.d;if(dl<0&&!(S.extra[d.mx]>0))return;S.extra[d.mx]=(S.extra[d.mx]||0)+dl;if(dl>0&&S[NOW[d.mx]]!==null)S[NOW[d.mx]]+=dl;render()}
   else if(d.nw){S[NOW[d.nw]]=Math.min(MAX[d.nw](),cur(d.nw)+ +d.d);render()}
   else if(d.xp){S.xp=Math.max(0,S.xp+ +d.xp);render()}
   else if(b.id==='conv'){if(S.xp>=xpNeed()){S.xp-=xpNeed();S.adv++;render()}}
