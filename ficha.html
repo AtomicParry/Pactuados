@@ -21,6 +21,7 @@ h2{font-family:Anton,sans-serif;font-weight:400;font-size:24px;letter-spacing:.0
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
 label{display:block;font-size:12px;color:var(--mut);font-weight:700}
 input,textarea{width:100%;font:inherit;color:var(--dark);background:#fff;border:0;border-bottom:2px solid var(--dark);padding:6px 4px;border-radius:0}
+textarea.nota{min-height:180px}
 textarea{border:2px solid var(--line);resize:vertical;min-height:60px}
 input:focus,textarea:focus,button:focus-visible{outline:2px solid var(--red);outline-offset:1px}
 .wide{grid-column:1/-1}
@@ -91,6 +92,26 @@ button.sm{width:30px;padding:4px 0}
 .fframe img{width:100%;height:100%;object-fit:cover;display:none}
 #fotoVazio{margin:auto;font-family:Anton,sans-serif;letter-spacing:.08em;color:#aaa;font-size:20px}
 .fbtns{display:flex;gap:6px;justify-content:center;margin-top:10px}
+.mbar{height:8px;background:#e8e5df;margin:6px 0 10px}
+.mbar i{display:block;height:100%;background:var(--red)}
+.box .big span{font-size:22px;color:var(--mut)}
+.box .big.sm{font-size:28px}
+.stats#adv .box{position:relative;overflow:hidden;border:3px solid var(--dark);border-top:8px solid var(--red);background:#fff;padding:12px 16px 14px}
+.stats#adv .box .big{font-size:44px}
+.box.pts{display:flex;flex-direction:column}
+.box.pts label{letter-spacing:.12em;text-transform:uppercase}
+.box.pts .big{font-size:88px!important;line-height:1;margin:auto;padding:4px 0 8px;text-align:center;color:var(--dark);text-shadow:3px 3px 0 var(--red)}
+.box.pts .big.bad{color:var(--red);text-shadow:3px 3px 0 var(--dark)}
+.box.nxt label{letter-spacing:.12em;text-transform:uppercase}
+.cats{display:flex;align-items:baseline;gap:12px;margin:2px 0 10px;font-family:Anton,sans-serif}
+.cats b{font-weight:400;font-size:46px;line-height:1;color:var(--mut)}
+.cats b.to{color:var(--red);font-size:64px}
+.cats em{font-style:normal;font-size:30px;color:var(--dark)}
+.segs{display:flex;gap:6px}
+.segs i{flex:1;height:20px;border:3px solid var(--dark);background:repeating-linear-gradient(135deg,#fff 0 6px,#eee 6px 12px);transform:skewX(-14deg)}
+.segs i.f{background:var(--red);border-color:var(--red)}
+.cnt{text-align:right;font-weight:700;color:var(--mut);margin-top:6px}
+.lvl{background:var(--red);color:#fff;font-weight:700;padding:4px 8px;margin-top:8px;text-align:center}
 .row.mx{margin-top:6px;border-top:1px dashed var(--line);padding-top:6px}
 .fbtns .b{padding:5px 12px}
 .b.o{background:#fff;color:var(--dark);border:2px solid var(--dark)}
@@ -133,6 +154,7 @@ button.sm{width:30px;padding:4px 0}
     <button data-t="inv">Inventário</button>
     <button data-t="pod">Poderes</button>
     <button data-t="agenda">Agenda</button>
+    <button data-t="notas">Anotações</button>
   </nav>
 
   <section class="tab on" id="ficha">
@@ -177,6 +199,12 @@ button.sm{width:30px;padding:4px 0}
     <div id="agPowList" style="margin-top:12px"></div>
   </section>
 
+  <section class="tab" id="notas">
+    <h2>Anotações</h2>
+    <button class="b" id="addNota">Nova anotação</button>
+    <div id="notaList" style="margin-top:12px"></div>
+  </section>
+
   <div class="tools">
     <button class="b" id="exp">Exportar ficha (.json)</button>
     <button class="b" id="imp">Importar ficha</button>
@@ -199,12 +227,12 @@ const ATTRS=[
 ['vontade','Vontade','força mental, emocional e espiritual'],
 ['constituicao','Constituição','resistência física e tolerância à dor']];
 const KEY='pactuados-ficha-v1';
-const fresh=()=>({info:{cat:1},foto:'',fotoMini:'',extra:{vit:0,pec:0},agenda:{nome:'',objetivo:'',poderes:[]},attr:{},cp:{vit:0,pec:0,ago:0},vitNow:null,pecNow:null,agoNow:0,xp:0,adv:0,traits:[],items:[],pows:[]});
+const fresh=()=>({info:{cat:1},notas:[],foto:'',fotoMini:'',extra:{vit:0,pec:0},agenda:{nome:'',objetivo:'',poderes:[]},attr:{},cp:{vit:0,pec:0,ago:0},vitNow:null,pecNow:null,agoNow:0,xp:0,adv:0,advProg:0,traits:[],items:[],pows:[]});
 let S=fresh();
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
 const save=()=>{window.__dirty&&window.__dirty()};
-const LIST=k=>k==='ap'?S.agenda.poderes:S[k];
+const LIST=k=>k==='ap'?S.agenda.poderes:k==='nt'?S.notas:S[k];
 const fillInfo=skip=>{
   document.querySelectorAll('#info [data-k]').forEach(el=>{if(el!==skip)el.value=S.info[el.dataset.k]??''});
   document.querySelectorAll('[data-ag]').forEach(el=>{if(el!==skip)el.value=(S.agenda||{})[el.dataset.ag]??''});
@@ -215,6 +243,8 @@ const sum=f=>ATTRS.reduce((t,a)=>t+f(A(a[0])),0);
 const vitMax=()=>8+2*(cat()-1)+S.cp.vit+((S.extra||{}).vit||0);
 const pecMax=()=>10+S.cp.pec+((S.extra||{}).pec||0);
 const xpNeed=()=>4+2*(cat()-1);
+const advNeed=()=>cat()>=5?3:2;   // pontos de avanço ganhos para subir 1 CAT
+let lvlMsg='';
 const poolTotal=()=>6+2*(cat()-1);
 const poolLeft=()=>poolTotal()-sum(a=>a.b);
 const cpLeft=()=>(cat()-1)-(S.cp.vit+S.cp.pec+S.cp.ago);
@@ -246,13 +276,19 @@ function render(){showFoto();
     <div class="cp-pips" title="vermelho = gasto">${pips||'<span style="font-size:13px">Suba de CAT para ganhar pontos</span>'}</div></div>
     ${crow('vit','Vitalidade',8+2*(c-1)+((S.extra||{}).vit||0))}${crow('pec','Pecado',10+((S.extra||{}).pec||0))}${crow('ago','Agonia',3)}
     <div class="cp-hint">Você ganha 1 ponto a cada CAT acima de 1. Cada ponto gasto soma +1 no máximo da condição.</div>`;
+  const need=advNeed(),maxed=c>=10,prog=maxed?need:Math.min(S.advProg||0,need);
+  let pp='';for(let i=0;i<need;i++)pp+=`<i class="${i<prog?'f':''}"></i>`;
   $('adv').innerHTML=`
-   <div class="box"><label>XP</label><div class="big">${S.xp} / ${xpNeed()}</div>
+   <div class="box"><label>XP</label><div class="big">${S.xp}<span> / ${xpNeed()}</span></div>
+     <div class="mbar"><i style="width:${Math.min(100,S.xp/xpNeed()*100)}%"></i></div>
      <div class="row"><button class="b sm" data-xp="-1">−</button><button class="b sm" data-xp="1">+</button>
-     <button class="b" id="conv" ${S.xp<xpNeed()?'disabled':''}>Converter em avanço</button></div>
-     <div class="hint">Meta: 4 de XP no CAT 1, +2 por CAT</div></div>
-   <div class="box red"><label>Pontos de avanço</label><div class="big ${advLeft()<0?'bad':''}">${advLeft()}</div>
-     <div class="hint">Total ganho: ${S.adv}. Gaste em atributos (★) ou traits.</div></div>`;
+     <button class="b" id="conv" ${S.xp<xpNeed()?'disabled':''}>Ganhar avanço</button></div></div>
+   <div class="box pts"><label>Pontos de avanço</label><div class="big ${advLeft()<0?'bad':''}">${advLeft()}</div></div>
+   <div class="box nxt"><label>${maxed?'CAT máxima':'Próxima CAT'}</label>
+     <div class="cats">${maxed?'<b class="to">10</b>':`<b>${c}</b><em>→</em><b class="to">${c+1}</b>`}</div>
+     <div class="segs">${pp}</div>
+     <div class="cnt">${prog} / ${need}</div>
+     ${lvlMsg?`<div class="lvl">${lvlMsg}</div>`:''}</div>`;
   $('advA1').textContent=advLeft();
   const pl=poolLeft();
   $('attrhint').innerHTML=`<div class="pool"><div class="pn ${pl<0?'bad':pl===0?'z':''}">${pl}</div>
@@ -271,6 +307,12 @@ function render(){showFoto();
 }
 
 function lists(){
+  if(!S.notas)S.notas=[];
+  $('notaList').innerHTML=S.notas.map((t,i)=>`<div class="item t">
+    <div class="top"><div><label>Título</label><input data-l="nt" data-i="${i}" data-f="n" value="${esc(t.n)}"></div>
+    <button class="x" data-rm="nt" data-i="${i}">Remover</button></div>
+    <div><label>Anotação</label><textarea class="nota" data-l="nt" data-i="${i}" data-f="d">${esc(t.d)}</textarea></div></div>`).join('')
+    ||'<p class="hint">Nenhuma anotação ainda.</p>';
   if(!S.agenda)S.agenda={nome:'',objetivo:'',poderes:[]};
   $('agPowList').innerHTML=S.agenda.poderes.map((t,i)=>`<div class="item t">
     <div class="top"><div><label>Poder da agenda</label><input data-l="ap" data-i="${i}" data-f="n" value="${esc(t.n)}"></div>
@@ -321,12 +363,20 @@ document.addEventListener('click',e=>{
   else if(d.mx){S.extra=S.extra||{vit:0,pec:0};const dl=+d.d;if(dl<0&&!(S.extra[d.mx]>0))return;S.extra[d.mx]=(S.extra[d.mx]||0)+dl;if(dl>0&&S[NOW[d.mx]]!==null)S[NOW[d.mx]]+=dl;render()}
   else if(d.nw){S[NOW[d.nw]]=Math.min(MAX[d.nw](),cur(d.nw)+ +d.d);render()}
   else if(d.xp){S.xp=Math.max(0,S.xp+ +d.xp);render()}
-  else if(b.id==='conv'){if(S.xp>=xpNeed()){S.xp-=xpNeed();S.adv++;render()}}
+  else if(b.id==='conv'){if(S.xp>=xpNeed()){
+    S.xp-=xpNeed();S.adv++;
+    if(cat()<10){
+      S.advProg=(S.advProg||0)+1;
+      if(S.advProg>=advNeed()){S.advProg=0;S.info.cat=cat()+1;fillInfo();lvlMsg='Subiu para a CAT '+cat()+'!';
+        setTimeout(()=>{lvlMsg='';render()},4000)}
+    }
+    render()}}
   else if(d.a){const a=A(d.a);if(d.d==='star'){if(advLeft()>0)a.a++}else if(d.d==='unstar'){if(a.a>0)a.a--}else a.b+=+d.d;render()}
   else if(d.rm){LIST(d.rm).splice(+d.i,1);lists();render()}
 });
 $('addTrait').onclick=()=>{if(advLeft()>0){S.traits.push({n:'',d:''});lists();render()}};
 $('addItem').onclick=()=>{S.items.push({n:'',q:1,d:''});lists();save()};
+$('addNota').onclick=()=>{S.notas.unshift({n:'',d:''});lists();save()};
 $('addAgPow').onclick=()=>{S.agenda.poderes.push({n:'',d:''});lists();save()};
 $('addPow').onclick=()=>{S.pows.push({n:'',d:''});lists();save()};
 document.addEventListener('input',e=>{
@@ -450,7 +500,7 @@ onSnapshot(ref,snap=>{
   S=Object.assign(fresh(),f.dados||{});S.info=S.info||{cat:1};
   const ae=document.activeElement;
   fillInfo(ae);
-  if(!(ae&&ae.closest&&ae.closest('#traitList,#itemList,#powList,#agPowList')))lists();
+  if(!(ae&&ae.closest&&ae.closest('#traitList,#itemList,#powList,#agPowList,#notaList')))lists();
   render();applying=false;
 },e=>{$('stat').textContent='Sem permissão ou erro: '+e.code});
 window.__dirty=()=>{
