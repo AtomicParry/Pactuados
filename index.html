@@ -36,8 +36,15 @@ input:focus,button:focus-visible{outline:2px solid var(--red);outline-offset:2px
 .side .nm{font-size:22px}
 .side .st{flex-direction:column;flex-wrap:nowrap;gap:4px}
 .side .st div{display:flex;justify-content:space-between;align-items:baseline;min-width:0;padding:2px 8px;text-align:left}
-.side .st small{display:inline;font-size:11px}
-.side .st b{font-size:20px}
+.side .st{gap:6px}
+.side .st div{padding:4px 10px;border-width:3px}
+.side .st small{display:inline;font-size:14px;font-weight:700}
+.side .st b{font-size:28px;letter-spacing:.03em}
+.side .st .v{border-color:#c4121a;color:#c4121a}
+.side .st .p{border-color:#111;color:#111}
+.side .st .a{border-color:#7b2fbe;color:#7b2fbe}
+.side .st small{color:inherit}
+.side .st .neg b{text-decoration:underline}
 .card .cat{color:var(--red);font-weight:700}
 .st{display:flex;gap:10px;flex-wrap:wrap}
 .st div{border:2px solid var(--dark);padding:4px 8px;text-align:center;min-width:70px}
@@ -173,12 +180,12 @@ function desenha(){
   const arr=[...fichas].sort((a,b)=>(b.dono===u.uid)-(a.dono===u.uid)||(a.resumo?.nome||'').localeCompare(b.resumo?.nome||''));
   $('list').innerHTML=arr.map(f=>{
     const r=f.resumo||{},mine=f.dono===u.uid,can=mine||papel==='mestre';
-    const box=(l,v,m)=>`<div class="${v<0?'neg':''}"><small>${l}</small><b>${v}/${m}</b></div>`;
+    const box=(l,v,m,c)=>`<div class="${c} ${v<0?'neg':''}"><small>${l}</small><b>${v}/${m}</b></div>`;
     return `<div class="card ${mine?'mine':''}">
       <div class="pic"><a class="ph" href="ficha.html?id=${f.id}">${r.foto?`<img src="${esc(r.foto)}" alt="">`:'<span>SEM FOTO</span>'}</a>
       <div class="side"><a class="open" href="ficha.html?id=${f.id}"><div class="nm">${esc(r.nome)||'Sem nome'}</div>
       <div class="cat">CAT ${r.cat??1}${mine?' · sua ficha':f.donoNome?' · de '+esc(f.donoNome):''}</div></a>
-      <div class="st">${box('VIT',r.vit??0,r.vitMax??0)}${box('PEC',r.pec??0,r.pecMax??0)}${box('AGO',r.ago??0,r.agoMax??0)}</div></div></div>
+      <div class="st">${box('VIT',r.vit??0,r.vitMax??0,'v')}${box('PEC',r.pec??0,r.pecMax??0,'p')}${box('AGO',r.ago??0,r.agoMax??0,'a')}</div></div></div>
       <div class="hint">${can?'Você pode editar':'Somente leitura'}</div>
       ${can?`<button class="x" data-del="${f.id}">Excluir</button>`:''}</div>`}).join('')
     ||'<p class="hint">Nenhuma ficha ainda. Clique em "Nova ficha".</p>';
