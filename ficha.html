@@ -246,7 +246,7 @@ const xpNeed=()=>4+2*(cat()-1);
 const advNeed=()=>cat()>=5?3:2;   // pontos de avanço ganhos para subir 1 CAT
 let lvlMsg='';
 const poolTotal=()=>6+2*(cat()-1);
-const poolLeft=()=>poolTotal()-sum(a=>a.b);
+const poolLeft=()=>poolTotal()-sum(a=>Math.max(0,a.b));   // valores negativos não devolvem pontos
 const cpLeft=()=>(cat()-1)-(S.cp.vit+S.cp.pec+S.cp.ago);
 const NOW={vit:'vitNow',pec:'pecNow',ago:'agoNow'};
 const MAX={vit:vitMax,pec:pecMax,ago:()=>3+S.cp.ago};
@@ -294,12 +294,12 @@ function render(){showFoto();
   $('attrhint').innerHTML=`<div class="pool"><div class="pn ${pl<0?'bad':pl===0?'z':''}">${pl}</div>
     <div class="pt"><b>Pontos restantes</b><span>de ${poolTotal()} no total · limite por atributo: ${c}</span><span>6 iniciais, +2 a cada CAT acima de 1</span></div></div>`
   $('attrs').innerHTML=ATTRS.map(([k,n,d])=>{
-    const a=A(k), v=a.b+a.a, over=v>c;
+    const a=A(k), v=a.b+a.a, over=v>c, neg=v<0;
     let pips='';for(let i=1;i<=10;i++)pips+=`<div class="pip ${i<=a.b?'f':i<=v?'a':''}" ${i>c?'style="opacity:.25"':''}></div>`;
     return `<div class="attr"><div><b>${n}</b> <span class="hint">${d}</span><div class="pips">${pips}</div></div>
-     <div class="row"><button class="b sm" data-a="${k}" data-d="-1" ${a.b<1?'disabled':''}>−</button>
-     <span class="val ${over?'bad':''}">${v}</span>
-     <button class="b sm" data-a="${k}" data-d="1" ${pl<1||v>=c?'disabled':''}>+</button>
+     <div class="row"><button class="b sm" data-a="${k}" data-d="-1" >−</button>
+     <span class="val ${over||neg?'bad':''}">${v}</span>
+     <button class="b sm" data-a="${k}" data-d="1" ${(a.b>=0&&pl<1)||v>=c?'disabled':''}>+</button>
      <button class="b sm" title="Gastar 1 ponto de avanço" data-a="${k}" data-d="star" ${advLeft()<1||v>=c?'disabled':''}>★</button>
      <button class="b sm" title="Devolver ponto de avanço" data-a="${k}" data-d="unstar" ${a.a<1?'disabled':''}>↺</button></div></div>`}).join('');
   $('addTrait').disabled=advLeft()<1;
