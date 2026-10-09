@@ -99,6 +99,7 @@ button.sm{width:30px;padding:4px 0}
 .stats#adv .box{position:relative;overflow:hidden;border:3px solid var(--dark);border-top:8px solid var(--red);background:#fff;padding:12px 16px 14px}
 .stats#adv .box .big{font-size:44px}
 .box.pts{display:flex;flex-direction:column}
+.box.pts #unconv{align-self:center;padding:6px 14px}
 .box.pts label{letter-spacing:.12em;text-transform:uppercase}
 .box.pts .big{font-size:88px!important;line-height:1;margin:auto;padding:4px 0 8px;text-align:center;color:var(--dark);text-shadow:3px 3px 0 var(--red)}
 .box.pts .big.bad{color:var(--red);text-shadow:3px 3px 0 var(--dark)}
@@ -242,7 +243,7 @@ const A=k=>S.attr[k]||(S.attr[k]={b:0,a:0});
 const sum=f=>ATTRS.reduce((t,a)=>t+f(A(a[0])),0);
 const vitMax=()=>8+2*(cat()-1)+S.cp.vit+((S.extra||{}).vit||0);
 const pecMax=()=>10+S.cp.pec+((S.extra||{}).pec||0);
-const xpNeed=()=>4+2*(cat()-1);
+const xpNeed=()=>4+(cat()-1);   // 4 de XP no CAT 1, +1 a cada CAT
 const advNeed=()=>cat()>=5?3:2;   // pontos de avanço ganhos para subir 1 CAT
 let lvlMsg='';
 const poolTotal=()=>6+2*(cat()-1);
@@ -283,7 +284,8 @@ function render(){showFoto();
      <div class="mbar"><i style="width:${Math.min(100,S.xp/xpNeed()*100)}%"></i></div>
      <div class="row"><button class="b sm" data-xp="-1">−</button><button class="b sm" data-xp="1">+</button>
      <button class="b" id="conv" ${S.xp<xpNeed()?'disabled':''}>Ganhar avanço</button></div></div>
-   <div class="box pts"><label>Pontos de avanço</label><div class="big ${advLeft()<0?'bad':''}">${advLeft()}</div></div>
+   <div class="box pts"><label>Pontos de avanço</label><div class="big ${advLeft()<0?'bad':''}">${advLeft()}</div>
+     <button class="b o" id="unconv" ${advLeft()<1?'disabled':''}>Devolver ao XP</button></div>
    <div class="box nxt"><label>${maxed?'CAT máxima':'Próxima CAT'}</label>
      <div class="cats">${maxed?'<b class="to">10</b>':`<b>${c}</b><em>→</em><b class="to">${c+1}</b>`}</div>
      <div class="segs">${pp}</div>
@@ -363,6 +365,13 @@ document.addEventListener('click',e=>{
   else if(d.mx){S.extra=S.extra||{vit:0,pec:0};const dl=+d.d;if(dl<0&&!(S.extra[d.mx]>0))return;S.extra[d.mx]=(S.extra[d.mx]||0)+dl;if(dl>0&&S[NOW[d.mx]]!==null)S[NOW[d.mx]]+=dl;render()}
   else if(d.nw){S[NOW[d.nw]]=Math.min(MAX[d.nw](),cur(d.nw)+ +d.d);render()}
   else if(d.xp){S.xp=Math.max(0,S.xp+ +d.xp);render()}
+  else if(b.id==='unconv'){if(advLeft()>0){
+    S.adv--;
+    if(cat()<10){
+      if((S.advProg||0)>0)S.advProg--;
+      else if(cat()>1){S.info.cat=cat()-1;S.advProg=advNeed()-1;fillInfo()}
+    }
+    lvlMsg='';S.xp+=xpNeed();render()}}
   else if(b.id==='conv'){if(S.xp>=xpNeed()){
     S.xp-=xpNeed();S.adv++;
     if(cat()<10){
