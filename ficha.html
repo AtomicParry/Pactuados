@@ -484,17 +484,37 @@ lists();render();
 })();
 </script>
 <script type="module">
-import {entrar,meuPapel,db,doc,onSnapshot,updateDoc,serverTimestamp} from './firebase.js';
+import {entrar,meuPapel,db,doc,onSnapshot,updateDoc,setDoc,serverTimestamp} from './firebase.js';
 const id=new URLSearchParams(location.search).get('id');
 if(!id)location.href='index.html';
 const u=await entrar();
 if(!u){location.href='index.html';await new Promise(()=>{})}
 const papel=await meuPapel(u.uid);
 if(!papel)location.href='index.html';
-const ref=doc(db,'fichas',id);
-let canEdit=false,applying=false,timer=null,lastJSON='';
-const lock=()=>document.querySelectorAll('#info,#fotoBox,.tab,.tools').forEach(e=>e.inert=!canEdit);
+const ref=doc(db,'fichas',id), pref=doc(db,'fichas',id,'privado','dados');
+// Partes privadas (só o dono e o mestre leem): traits, inventário, poderes, agenda e anotações
+const PRIV=['traits','items','pows','agenda','notas'];
+const pick=(o,ks)=>Object.fromEntries(ks.map(k=>[k,o[k]]));
+const pubOf=o=>{const c={...o};PRIV.forEach(k=>delete c[k]);return c};
+let canEdit=false,applying=false,timer=null,lastPub='',lastPriv='',privReady=false,privSub=false;
+const LISTAS='#traitList,#itemList,#powList,#agPowList,#notaList';
+const lock=()=>{
+  document.querySelectorAll('#info,#fotoBox,.tab,.tools').forEach(e=>e.inert=!canEdit);
+  document.querySelectorAll('#nav button').forEach(b=>{if(b.dataset.t!=='ficha')b.style.display=canEdit?'':'none'});
+  if(!canEdit)document.querySelector('#nav [data-t=ficha]').click();
+};
 lock();
+const onPriv=snap=>{
+  privReady=true;
+  if(!snap.exists()||snap.metadata.hasPendingWrites||timer)return;
+  const p=snap.data(),j=JSON.stringify(p);if(j===lastPriv)return;lastPriv=j;
+  applying=true;
+  PRIV.forEach(k=>{if(p[k]!==undefined)S[k]=p[k]});
+  const ae=document.activeElement;
+  fillInfo(ae);
+  if(!(ae&&ae.closest&&ae.closest(LISTAS)))lists();
+  render();applying=false;
+};
 onSnapshot(ref,snap=>{
   if(!snap.exists()){document.body.innerHTML='<p style="color:#fff;padding:30px">Ficha não encontrada. <a style="color:#fff" href="index.html">Voltar</a></p>';return}
   const f=snap.data();
@@ -503,24 +523,34 @@ onSnapshot(ref,snap=>{
   const st=$('stat');
   st.className=canEdit?'':'ro';
   st.textContent=canEdit?(f.dono===u.uid?'Sua ficha · salva automaticamente':'Modo mestre · salva automaticamente'):'Somente leitura (ficha de outro jogador)';
+  if(canEdit&&!privSub){privSub=true;onSnapshot(pref,onPriv,e=>{$('stat').textContent='Sem permissão ou erro: '+e.code})}
   if(snap.metadata.hasPendingWrites||timer)return;
-  const j=JSON.stringify(f.dados||{});if(j===lastJSON)return;lastJSON=j;
+  const dd=f.dados||{};
+  const legacy=PRIV.some(k=>k in dd);            // ficha antiga: partes privadas ainda dentro de "dados"
+  const j=JSON.stringify(pubOf(dd));if(j===lastPub&&!legacy)return;lastPub=j;
   applying=true;
-  S=Object.assign(fresh(),f.dados||{});S.info=S.info||{cat:1};
+  const keep=pick(S,PRIV);
+  S=Object.assign(fresh(),dd);S.info=S.info||{cat:1};
+  if(!legacy)Object.assign(S,keep);
   const ae=document.activeElement;
   fillInfo(ae);
-  if(!(ae&&ae.closest&&ae.closest('#traitList,#itemList,#powList,#agPowList,#notaList')))lists();
+  if(!(ae&&ae.closest&&ae.closest(LISTAS)))lists();
   render();applying=false;
+  if(legacy&&canEdit){privReady=true;window.__dirty()}   // migra para a área privada
 },e=>{$('stat').textContent='Sem permissão ou erro: '+e.code});
 window.__dirty=()=>{
   if(applying||!canEdit)return;
   clearTimeout(timer);
   timer=setTimeout(async()=>{
     timer=null;
-    const d=JSON.parse(JSON.stringify(S));lastJSON=JSON.stringify(d);
-    try{await updateDoc(ref,{dados:d,atualizada:serverTimestamp(),
-      resumo:{nome:S.info.nome||'',cat:cat(),vit:cur('vit'),vitMax:vitMax(),pec:cur('pec'),pecMax:pecMax(),ago:cur('ago'),agoMax:MAX.ago(),foto:S.fotoMini||''}})}
-    catch(e){$('stat').textContent='Erro ao salvar: '+e.code}
+    const d=JSON.parse(JSON.stringify(S)),pub=pubOf(d),priv=pick(d,PRIV);
+    lastPub=JSON.stringify(pub);
+    try{
+      const jp=JSON.stringify(priv);
+      if(privReady&&jp!==lastPriv){await setDoc(pref,priv);lastPriv=jp}
+      await updateDoc(ref,{dados:pub,atualizada:serverTimestamp(),
+        resumo:{nome:S.info.nome||'',cat:cat(),vit:cur('vit'),vitMax:vitMax(),pec:cur('pec'),pecMax:pecMax(),ago:cur('ago'),agoMax:MAX.ago(),foto:S.fotoMini||''}});
+    }catch(e){$('stat').textContent='Erro ao salvar: '+e.code}
   },600);
 };
 </script>
