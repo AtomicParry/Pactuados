@@ -215,7 +215,8 @@ let delId=null,delT;
 document.addEventListener('click',async e=>{
   const b=e.target.closest('[data-del]');if(!b)return;
   if(delId!==b.dataset.del){delId=b.dataset.del;b.textContent='Confirmar exclusão?';clearTimeout(delT);delT=setTimeout(()=>{delId=null;b.textContent='Excluir'},4000);return}
-  delId=null;try{await deleteDoc(doc(db,'fichas',b.dataset.del))}catch(x){alert('Sem permissão para excluir.')}
+  delId=null;const fid=b.dataset.del;
+  try{try{await deleteDoc(doc(db,'fichas',fid,'privado','dados'))}catch(x){}await deleteDoc(doc(db,'fichas',fid))}catch(x){alert('Sem permissão para excluir.')}
 });
 
 // partículas
