@@ -23,8 +23,9 @@ label{display:block;font-size:12px;color:var(--mut);font-weight:700}
 input,textarea{width:100%;font:inherit;color:var(--dark);background:#fff;border:0;border-bottom:2px solid var(--dark);padding:6px 4px;border-radius:0}
 label.desv{color:var(--red)}
 textarea.desv{border-color:var(--red)}
-textarea.nota{min-height:180px}
-textarea{border:2px solid var(--line);resize:vertical;min-height:60px}
+textarea.nota{min-height:320px}
+[data-ag=objetivo]{min-height:180px}
+textarea{border:2px solid var(--line);resize:vertical;min-height:150px;line-height:1.4;overflow:hidden}
 input:focus,textarea:focus,button:focus-visible{outline:2px solid var(--red);outline-offset:1px}
 .wide{grid-column:1/-1}
 nav{display:flex;flex-wrap:wrap;gap:6px;margin-top:20px;border-bottom:3px solid var(--dark)}
@@ -236,7 +237,10 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
 const save=()=>{window.__dirty&&window.__dirty()};
 const LIST=k=>k==='ap'?S.agenda.poderes:k==='nt'?S.notas:S[k];
-const fillInfo=skip=>{
+function grow(el){el.style.height='auto';if(el.scrollHeight>el.clientHeight)el.style.height=(el.scrollHeight+4)+'px'}
+function growAll(){document.querySelectorAll('.tab.on textarea').forEach(grow)}
+document.addEventListener('input',e=>{if(e.target.tagName==='TEXTAREA')grow(e.target)});
+const fillInfo=skip=>{requestAnimationFrame(growAll);
   document.querySelectorAll('#info [data-k]').forEach(el=>{if(el!==skip)el.value=S.info[el.dataset.k]??''});
   document.querySelectorAll('[data-ag]').forEach(el=>{if(el!==skip)el.value=(S.agenda||{})[el.dataset.ag]??''});
 };
@@ -463,6 +467,8 @@ $('fotoFile').onchange=e=>{
   img.onerror=()=>alert('Não consegui abrir essa imagem.');
   img.src=url;
 };
+{const _l=lists;lists=function(){_l();requestAnimationFrame(growAll)}}
+$('nav').addEventListener('click',()=>requestAnimationFrame(growAll));
 lists();render();
 // partículas vermelhas
 (function(){
